@@ -1,0 +1,18 @@
+# script de test pour le programme hello world
+# usage :
+# > scat hello.script
+
+reset
+
+# lecture de la version
+80 00 00 00 00 		# avec une mauvaise taille -> sw = 6c05
+80 00 00 00 $sw2	# avec p3=sw3
+
+# introduction de données
+80 01 00 00 00
+80 01 00 00 02 a b
+80 01 00 00 02 01 02 03		# p3 incorrect
+
+80 01 00 00 20			# p3 trop grand
+
+exit				# fin du script
