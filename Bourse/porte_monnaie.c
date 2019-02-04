@@ -2,22 +2,23 @@
 #include <inttypes.h>
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include "porte_monnaie.h"
 
-//------------------------------------------------
-// Programme "Porte_Monnaie" pour carte à puce
-// 
-//------------------------------------------------
+/*
+**------------------------------------------------
+** Programme "Porte_Monnaie" pour carte à puce
+** 
+**------------------------------------------------
+*/
 
-
-void sendbytet0(uint8_t b);
-uint8_t recbytet0(void);
 
 uint8_t cla, ins, p1, p2, p3;
 uint8_t sw1, sw2;
-
-int taille;
-#define MAX_PERSO	32
-#define MAXI		128
+int		taille;
+t_ampon		tampon		EEMEM;
+t_etat		etat		EEMEM;
 char		nom[MAX_PERSO]	EEMEM;
 uint16_t	ee_n		EEMEM;
 uint8_t		name_size	EEMEM;
@@ -33,6 +34,48 @@ void	atr(uint8_t n, char* hist)
 	sendbytet0(n);	
 	while (n--)
 		sendbytet0(*hist++);
+	
+}
+
+/*
+** Procedure d'engagement d'ecriture dans l'eeprom
+*/
+
+void	ft_engager(int n, ...)
+{
+	va_list		ap;
+	uint8_t		*source;
+	uint8_t		*dest;
+	uint8_t		i;
+	uint8_t		tete_buff;
+
+	i = 0;
+	etat = 0; //eeprom
+	tete_buff = 0;
+	va_start(ap, n);
+	while (n)
+	{
+		source = va_arg(ap, void*);
+		dest = va_arg(ap, void*);
+		eeprom_write_block(&n, &(tampon.n[i]), 4);
+		eeprom_write_block(&dest, &(tampon.d[i]), 2);
+		eeprom_write_block(source, &(tampon.buffer[tete_buff]), n);
+		tete_buff += n;
+		i++;
+		n = va_arg(ap, int);
+	}
+	eeprom_write_block(&i, &(tampon.n_op));
+	etat = plein; //eeprom
+}
+
+void	ft_valider(void)
+{
+	if (etat == plein) //eeprom
+	{
+		eeprom_read_block();
+		eeprom_write_block();
+	}
+	etat = vide; //eeprom
 }
 
 void	set_user_name(void)
@@ -92,7 +135,6 @@ void	credit_balance(void)
 	uint16_t	old_credit;
 	uint8_t		byte;
 
-	new_credit = 0;
 	if (p3 != 2)
 	{
 		sw1 = 0x6c;
@@ -100,11 +142,12 @@ void	credit_balance(void)
 		return ;
 	}
 	sendbytet0(ins); //???
-	new_credit |= (uint16_t)(recbytet0()) << 8;
+	new_credit = (uint16_t)(recbytet0()) << 8;
 	new_credit |= (uint16_t)(recbytet());
 	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n)) << 8;
 	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n + 1));
-	if (old_credit + new_credit < old_credit)
+	if (old_credit + new_credit < old_credit
+	|| old_credit + new_credit < old_credit)
 		sw1 = 0x6c; //ici : mauvais sw, il faut sw de capacite depassee
 	else
 	{
@@ -115,7 +158,7 @@ void	credit_balance(void)
 	sw1 = 0x90;
 }
 
-void	credit_balance(void)
+void	debit_balance(void)
 {
 	uint16_t	debit;
 	uint16_t	old_credit;
@@ -164,7 +207,7 @@ int		main(void)
 	ASSR |= 1 << AS2;
 
 	atr(11,"Hello scard");
-
+	ft_valider();
 	taille = 0;
 	sw2 = 0;
 	for (;;)

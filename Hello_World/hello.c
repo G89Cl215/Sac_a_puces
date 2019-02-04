@@ -25,7 +25,7 @@ void atr(uint8_t n, char* hist)
 {
     	sendbytet0(0x3b);	// définition du protocole
     	sendbytet0(n);		// nombre d'octets d'historique
-    	while(n--)		// Boucle d'envoi des octets d'historique
+    	while (n--)		// Boucle d'envoi des octets d'historique
     	{
         	sendbytet0(*hist++);
     	}
@@ -46,10 +46,8 @@ void version(int t, char* sv)
     	}
 	sendbytet0(ins);	// acquittement
 	// émission des données
-	for(i=0;i<p3;i++)
-    	{
+	for (i=0;i<p3;i++)
         	sendbytet0(sv[i]);
-    	}
     	sw1=0x90;
 }
 
@@ -57,20 +55,18 @@ void version(int t, char* sv)
 // commande de réception de données
 void intro_data()
 {
-    	int i;
+    	int	i;
      	// vérification de la taille
     	if (p3>MAXI)
 	{
 	   	sw1=0x6c;	// P3 incorrect
         	sw2=MAXI;	// sw2 contient l'information de la taille correcte
-		return;
+		return ;
     	}
 	sendbytet0(ins);	// acquitement
 
-	for(i=0;i<p3;i++)	// boucle d'envoi du message
-	{
+	for (i=0;i<p3;i++)	// boucle d'envoi du message
 	    data[i]=recbytet0();
-	}
 	taille=p3; 		// mémorisation de la taille des données lues
 	sw1=0x90;
 }
@@ -87,10 +83,8 @@ void sortie_data()
     	}
 	sendbytet0(ins);	// acquitement
 
-	for(i=0;i<p3;i++)	// boucle d'envoi du message
-	{
+	for (i=0;i<p3;i++)	// boucle d'envoi du message
 	    sendbytet0(data[i]);
-	}
 	sw1=0x90;
 }
 
@@ -100,52 +94,50 @@ void sortie_data()
 int main(void)
 {
   	// initialisation des ports
-	ACSR=0x80;
-	DDRB=0xff;
-	DDRC=0xff;
-	DDRD=0;
-	PORTB=0xff;
-	PORTC=0xff;
-	PORTD=0xff;
-	ASSR=1<<EXCLK;
-	TCCR2A=0;
-	ASSR|=1<<AS2;
+	ACSR = 0x80;
+	DDRB = 0xff;
+	DDRC = 0xff;
+	DDRD = 0;
+	PORTB = 0xff;
+	PORTC = 0xff;
+	PORTD = 0xff;
+	ASSR = 1 << EXCLK;
+	TCCR2A = 0;
+	ASSR |= 1 << AS2;
 
-
-	// ATR
   	atr(11,"Hello scard");
 
-	taille=0;
-	sw2=0;		// pour éviter de le répéter dans toutes les commandes
+	taille = 0;
+	sw2 = 0;		// pour éviter de le répéter dans toutes les commandes
   	// boucle de traitement des commandes
-  	for(;;)
+  	for (;;)
   	{
     		// lecture de l'entête
-    		cla=recbytet0();
-    		ins=recbytet0();
-    		p1=recbytet0();
-	    	p2=recbytet0();
-    		p3=recbytet0();
-	    	sw2=0;
+    		cla = recbytet0();
+    		ins = recbytet0();
+    		p1 = recbytet0();
+	    	p2 = recbytet0();
+    		p3 = recbytet0();
+	    	sw2 = 0;
 		switch (cla)
 		{
-	  	case 0x80:
-		    	switch(ins)
+	  	case 0x80 :
+		    	switch (ins)
 			{
-			case 0:
+			case 0 :
 				version(4,"1.00");
-				break;
-		  	case 1:
+				break ;
+		  	case 1 :
 	        		intro_data();
 	        		break;
-		  	case 2:
+		  	case 2 :
 	        		sortie_data();
-	        		break;
-            		default:
+	        		break ;
+            		default :
 		    		sw1=0x6d; // code erreur ins inconnu
         		}
-			break;
-      		default:
+			break ;
+      		default :
         		sw1=0x6e; // code erreur classe inconnue
 		}
 		sendbytet0(sw1); // envoi du status word
