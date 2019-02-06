@@ -6,7 +6,7 @@
 /*   By: tgouedar <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/02/06 15:15:10 by tgouedar          #+#    #+#             */
-/*   Updated: 2019/02/06 16:16:31 by tgouedar         ###   ########.fr       */
+/*   Updated: 2019/02/06 16:37:53 by tgouedar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,19 +21,18 @@
 /*
 **------------------------------------------------
 ** Programme "Porte_Monnaie" pour carte à puce
-** 
+** CE PROGRAMME ADOPTE LA CONVENTION LITTLE ENDIAN
 **------------------------------------------------
 */
-
 
 uint8_t cla, ins, p1, p2, p3;
 uint8_t sw1, sw2;
 int		taille;
-t_ampon		tampon		EEMEM;
-t_etat		etat		EEMEM;
+t_ampon		tampon			EEMEM;
+t_etat		etat			EEMEM;
 char		nom[MAX_PERSO]	EEMEM;
-uint16_t	ee_n		EEMEM;
-uint8_t		name_size	EEMEM;
+uint16_t	ee_n			EEMEM;
+uint8_t		name_size		EEMEM;
 uint8_t		data[MAXI];
 
 /*
@@ -121,9 +120,8 @@ void	set_user_name(void)
 	sendbytet0(ins);
 	for (i = 0; i < p3; i++)
 		data[i] = recbytet0();
-	for (i = 0; i < p3; i++)
-		eeprom_write_byte(&(nom[i]), data[i]);
-	eeprom_write_byte(&name_size, p3);
+	ft_engager(p3, nom, data, 1, &name_size, &p3, 0);
+	ft_valider();
 	sw1 = 0x90;
 }
 
@@ -154,8 +152,8 @@ void	get_balance(void)
 		return ;
 	}
 	sendbytet0(ins);
-	sendbytet0(eeprom_read_byte((uint8_t*)(&ee_n));
 	sendbytet0(eeprom_read_byte((uint8_t*)(&ee_n + 1));
+	sendbytet0(eeprom_read_byte((uint8_t*)(&ee_n));
 	sw1 = 0x90;
 }
 
@@ -172,18 +170,18 @@ void	credit_balance(void)
 		return ;
 	}
 	sendbytet0(ins); //???
-	new_credit = (uint16_t)(recbytet0()) << 8;
-	new_credit |= (uint16_t)(recbytet());
-	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n)) << 8;
-	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n + 1));
+	new_credit = (uint16_t)(recbytet0());
+	new_credit |= (uint16_t)(recbytet()) << 8;
+	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n));
+	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n + 1)) << 8;
 	if (old_credit + new_credit < old_credit
 	|| old_credit + new_credit < old_credit)
 		sw1 = 0x6c; //ici : mauvais sw, il faut sw de capacite depassee
 	else
 	{
 		new_credit += old_credit;
-		eeprom_write_byte((uint8_t*)(&ee_n), (uint8_t)(new_credit >> 8));
-		eeprom_write_byte((uint8_t*)(&een) + 1, (uint8_t)(new_credit & 255));
+		ft_engager(2, (uint8_t*)(&ee_n), (uint8_t*)(&new_credit), 0);
+		ft_valider();
 	}
 	sw1 = 0x90;
 }
@@ -202,17 +200,17 @@ void	debit_balance(void)
 		return ;
 	}
 	sendbytet0(ins);
-	debit |= (uint16_t)(recbytet0()) << 8;
 	debit |= (uint16_t)(recbytet0());
-	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n)) << 8;
-	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n + 1));
+	debit |= (uint16_t)(recbytet0()) << 8;
+	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n));
+	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n + 1)) << 8;
 	if (debit > old_credit)
 		sw1 = 0x6c; //ici : mauvais sw il faut sw de capacite depassee
 	else
 	{
 		debit -= old_credit;
-		eeprom_write_byte((uint8_t*)(&ee_n), (uint8_t)(debit >> 8));
-		eeprom_write_byte((uint8_t*)(&een) + 1, (uint8_t)(debit & 255));
+		ft_engager(2, (uint8_t*)(&ee_n), (uint8_t*)(&new_credit), 0);
+		ft_valider();
 	}
 	sw1 = 0x90;
 }
