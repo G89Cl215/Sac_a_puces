@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   porte_monnaie.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: tgouedar <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/02/06 15:15:10 by tgouedar          #+#    #+#             */
+/*   Updated: 2019/02/06 16:16:31 by tgouedar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <io.h>
 #include <inttypes.h>
 #include <avr/eeprom.h>
@@ -34,7 +46,6 @@ void	atr(uint8_t n, char* hist)
 	sendbytet0(n);	
 	while (n--)
 		sendbytet0(*hist++);
-	
 }
 
 /*
@@ -50,7 +61,7 @@ void	ft_engager(int n, ...)
 	uint8_t		tete_buff;
 
 	i = 0;
-	etat = 0; //eeprom
+	eeprom_update_word(&etat, 0);
 	tete_buff = 0;
 	va_start(ap, n);
 	while (n)
@@ -65,17 +76,36 @@ void	ft_engager(int n, ...)
 		n = va_arg(ap, int);
 	}
 	eeprom_write_block(&i, &(tampon.n_op));
-	etat = plein; //eeprom
+	eeprom_update_word(&etat, PLEIN);
 }
 
 void	ft_valider(void)
 {
-	if (etat == plein) //eeprom
+	char		buff[50];
+	uint8_t		*source;
+	uint8_t		**dest;
+	uint8_t		i;
+	uint8_t		tete_buff;
+	int16_t		n_op;
+	int16_t		status;
+ 
+	status = eeprom_read_word(&etat);
+	i = 0;
+	tete_buff = 0;
+	if (status == PLEIN)
 	{
-		eeprom_read_block();
-		eeprom_write_block();
+		eeprom_read_block(buff, tampon.buffer, 50);	
+		n_op = eeprom_read_word(&(tampon.n_op));
+		while (i < n_op)
+		{
+			n = eeprom_read_word(&(tampon.n[i]));
+			eeprom_read_block(dest, &(tampon.d[i]), 2);
+			eeprom_write_block(&(buff[tete_buff]), *dest, n);
+			i++;
+			tete_buff += n;
+		}
 	}
-	etat = vide; //eeprom
+	eeprom_update_word(&etat, 0);
 }
 
 void	set_user_name(void)
