@@ -28,9 +28,10 @@
 uint8_t cla, ins, p1, p2, p3;
 uint8_t sw1, sw2;
 int		taille;
+uint32_t	clef[4]			EEMEM;
 t_ampon		tampon			EEMEM;
 t_etat		etat			EEMEM;
-char		nom[MAX_PERSO]	EEMEM;
+char		nom[MAX_PERSO]		EEMEM;
 uint16_t	ee_n			EEMEM;
 uint8_t		name_size		EEMEM;
 uint8_t		data[MAXI];
@@ -48,7 +49,8 @@ void	atr(uint8_t n, char* hist)
 }
 
 /*
-** Procedure d'engagement d'ecriture dans l'eeprom
+** Procedures d'engagement et de validation de
+** l'ecriture dans l'eeprom
 */
 
 void	ft_engager(int n, ...)
@@ -107,6 +109,91 @@ void	ft_valider(void)
 	eeprom_update_word(&etat, 0);
 }
 
+/*
+** Ensmble des fonctions de cryptographie de la carte
+*/
+
+void	set_key(void)
+{
+	int		i;
+	uint32_t 	key[4];
+
+	if (p3 != 16)
+	{
+		sw1 = 0x6c;
+		sw2 = 16;
+		return ;
+	}
+	sendbytet0(ins);
+	for (i = 0; i < 16; i++)
+		data[i] = recbytet0();
+	for (i = 0; i < 4: i++)
+		key[i] = data[4 * i] | (data[4 * i + 1] << 8)
+			| (data[4 * i + 2] << 16) | (data[4 * i + 3] << 24);
+	ft_engager(16, data, clef, 0);
+	ft_valider();
+	sw1 = 0x90;
+}
+
+void	get_response(void)
+{
+	int	i;
+
+	if (p3 != 16)
+	{
+		sw1 = 0x6c;
+		sw2 = 16;
+		return ;
+	}
+	sendbytet0(ins);
+	for (i = 0; i < 16; i++)
+		data[i] = recbytet0();
+	ft_engager();
+	ft_valider();
+	sw1 = 0x90;
+}
+
+void	intro_clair_chiffre(void)
+{
+	int	i;
+
+	if (p3 != 16)
+	{
+		sw1 = 0x6c;
+		sw2 = 16;
+		return ;
+	}
+	sendbytet0(ins);
+	for (i = 0; i < 16; i++)
+		data[i] = recbytet0();
+	ft_engager();
+	ft_valider();
+	sw1 = 0x90;
+}
+
+void	set_crypto(void)
+{
+	int	i;
+
+	if (p3 != 16)
+	{
+		sw1 = 0x6c;
+		sw2 = 16;
+		return ;
+	}
+	sendbytet0(ins);
+	for (i = 0; i < 16; i++)
+		data[i] = recbytet0();
+	ft_engager();
+	ft_valider();
+	sw1 = 0x90;
+}
+
+
+/*
+** Ensemble des instructions possibles avec la carte
+*/
+
 void	set_user_name(void)
 {
 	int	i;
@@ -125,11 +212,12 @@ void	set_user_name(void)
 	sw1 = 0x90;
 }
 
+
 void	get_user_name(void)
 {
 	int i;
 
-	if (p3 != name_size)
+	if (p3 != eeprom_read_byte(name_size))
 	{
 		sw1 = 0x6c;
 		sw2 = name_size;
@@ -169,7 +257,7 @@ void	credit_balance(void)
 		sw2 = 0X02;
 		return ;
 	}
-	sendbytet0(ins); //???
+	sendbytet0(ins);
 	new_credit = (uint16_t)(recbytet0());
 	new_credit |= (uint16_t)(recbytet()) << 8;
 	old_credit |= (uint16_t)eeprom_read_byte((uint8_t*)(&ee_n));
@@ -209,7 +297,7 @@ void	debit_balance(void)
 	else
 	{
 		debit -= old_credit;
-		ft_engager(2, (uint8_t*)(&ee_n), (uint8_t*)(&new_credit), 0);
+		ft_engager(2, (uint8_t*)(&new_credit), (uint8_t*)(&ee_n), 0);
 		ft_valider();
 	}
 	sw1 = 0x90;
@@ -265,6 +353,18 @@ int		main(void)
 						break ;
 					case 4 :
 						debit_balance();
+						break ;
+					case 10 :
+						set_key();
+						break ;
+					case 11 :
+						into_clair_chiffre();
+						break ;
+					case 12 :
+						set_crypto();
+						break ;
+					case 0xc0 :
+						get_response();
 						break ;
 					default :
 						sw1 = 0x6d; // code erreur ins inconnu
