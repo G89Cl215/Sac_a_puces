@@ -139,17 +139,15 @@ void	get_response(void)
 {
 	int	i;
 
-	if (p3 != 16)
+	if (p3 != 8)
 	{
 		sw1 = 0x6c;
-		sw2 = 16;
+		sw2 = 8;
 		return ;
 	}
 	sendbytet0(ins);
-	for (i = 0; i < 16; i++)
-		data[i] = recbytet0();
-	ft_engager();
-	ft_valider();
+	for (i = 0; i < 8; i++)
+		sendbytet0(response[i]);
 	sw1 = 0x90;
 }
 
@@ -157,17 +155,13 @@ void	intro_clair_chiffre(void)
 {
 	int	i;
 
-	if (p3 != 16)
+	if (p3 != 8)
 	{
 		sw1 = 0x6c;
-		sw2 = 16;
+		sw2 = 8;
 		return ;
 	}
 	sendbytet0(ins);
-	for (i = 0; i < 16; i++)
-		data[i] = recbytet0();
-	ft_engager();
-	ft_valider();
 	sw1 = 0x90;
 }
 
@@ -175,17 +169,13 @@ void	set_crypto(void)
 {
 	int	i;
 
-	if (p3 != 16)
+	if (p3 != 8)
 	{
 		sw1 = 0x6c;
-		sw2 = 16;
+		sw2 = 8;
 		return ;
 	}
 	sendbytet0(ins);
-	for (i = 0; i < 16; i++)
-		data[i] = recbytet0();
-	ft_engager();
-	ft_valider();
 	sw1 = 0x90;
 }
 
@@ -378,4 +368,3 @@ int		main(void)
 	}
 	return 0;
 }
-
