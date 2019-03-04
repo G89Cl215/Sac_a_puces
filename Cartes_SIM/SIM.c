@@ -4,11 +4,11 @@
 #include <avr/pgmspace.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include "porte_monnaie.h"
+#include "SIM.h"
 
 /*
 **------------------------------------------------
-** Programme "PIN&PUK" pour carte à puce
+** Programme "PUK&PIN" pour carte à puce
 ** CE PROGRAMME ADOPTE LA CONVENTION LITTLE ENDIAN
 **------------------------------------------------
 */
@@ -32,7 +32,7 @@ uint8_t		data[MAXI];
 /*
 ** Procédure qui renvoie l'ATR
 */
-
+a
 void	atr(uint8_t n, char* hist)
 {
 	sendbytet0(0x3b);
@@ -116,12 +116,17 @@ void	ft_valider(void)
 
 int	code_cmp(uint8_t *a, uint8_t *b)
 {
-	int	i;
+	int		i;
+	unsigned int	cmp;
 
+	cmp = 0;
 	i = 0;
-	while ((a[i] == b[i]) && (i < CODE_SIZE - 1))
-		i++;	
-	return (a[i] - b[i]);
+	while (i < CODE_SIZE - 1)
+	{
+		cmp |= a[i] ^ b[i];
+		i++;
+	}
+	return ((cmp));
 }
 
 /*

@@ -9,7 +9,7 @@
 # $ make fuses
 
 # nom du fichier principal du projet
-NAME 	= PIN_PUK
+NAME 	= SIM
 #nom du fichier programme
 PROGNAME = $(NAME).hex
 
