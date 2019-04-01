@@ -339,7 +339,7 @@ int LShl4(int sx, uint8_t*x)
 	}
 	return i;
 }
-
+/*
 // fonctions de conversion chaine hexa --> nombre
 // rend le nombre de digits
 int AToL(uint8_t*r,char*s)
@@ -465,7 +465,7 @@ int main()
 	return 0;
 }
 
-/*
+
 Quelques clés rsa avec leur factorisation
 
 n = 68f4ae1b62792228457af7e8952f63a327cebb7aff6cfe596ee716e5477f7807
