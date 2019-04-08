@@ -1,0 +1,49 @@
+
+# test des routines asm
+
+little_endian
+
+alias t
+alias a[4]
+alias b[4]
+
+set a %d12345
+set b %d10000
+
+# add32
+8a 00 00 00 08 $a $b
+
+# get response
+8a c0 0 0 0
+set t $sw2
+8a c0 0 0 $t
+
+say -d $reply;$t
+
+# idem version assembleur
+8a 00 01 00 08 $a $b
+8a c1 0 0 4
+say -d $reply;4
+
+
+# incr
+alias la[%d10]
+alias lb[%d10]
+
+set la %d987654321001234567890
+set lb %d123545678909876543210
+
+8a 01 00 %d10 %d20 $la $lb
+8a c0 0 0 0
+set t $sw2
+8a c0 0 0 $t
+
+say -d $reply;$t 
+
+#idem version assembleur
+8a 1 1 %d10 %d20 $la $lb
+8a c1 0 0 0
+set t $sw2
+8a c1 0 0 $t
+
+say -d $reply;$t
